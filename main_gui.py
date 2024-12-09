@@ -94,8 +94,8 @@ class TransportApp:
                 cargo_weight = float(cargo_weight_entry.get())
                 if not name.isalpha() or len(name) < 2:
                     raise ValueError("Имя должно содержать только буквы и быть не менее 2 символов.")
-                if cargo_weight <= 0 or cargo_weight > 10000:
-                    raise ValueError("Вес груза должен быть положительным числом не более 10000 кг.")
+                if cargo_weight <= 0 or cargo_weight > 1000:
+                    raise ValueError("Вес груза должен быть положительным числом не более 1000 т.")
                 
                 client = Client(name, cargo_weight, vip_status.get())
                 self.transport_company.add_client(client)
@@ -119,7 +119,7 @@ class TransportApp:
         vehicle_type_var.set("Грузовик")
         tk.OptionMenu(vehicle_window, vehicle_type_var, "Грузовик", "Поезд").pack(pady=5)
 
-        tk.Label(vehicle_window, text="Грузоподъемность (в кг)").pack(pady=5)
+        tk.Label(vehicle_window, text="Грузоподъемность (в т)").pack(pady=5)
         capacity_entry = tk.Entry(vehicle_window)
         capacity_entry.pack(pady=5)
 
