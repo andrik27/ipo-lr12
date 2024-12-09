@@ -81,7 +81,7 @@ class TransportApp:
         client_name_entry = tk.Entry(client_window)
         client_name_entry.pack(pady=5)
 
-        tk.Label(client_window, text="Вес груза (в кг)").pack(pady=5)
+        tk.Label(client_window, text="Вес груза (в т)").pack(pady=5)
         cargo_weight_entry = tk.Entry(client_window)
         cargo_weight_entry.pack(pady=5)
 
