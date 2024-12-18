@@ -23,6 +23,10 @@ class TransportApp:
         self.status_bar = tk.Label(root, text="Готово", bd=1, relief=tk.SUNKEN, anchor=tk.W)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
+        # Привязка двойного нажатия к спискам
+        self.clients_listbox.bind("<Double-Button-1>", self.edit_client)
+        self.vehicles_listbox.bind("<Double-Button-1>", self.edit_vehicle)
+
     def create_menu(self):
         menu_bar = tk.Menu(self.root)
         self.root.config(menu=menu_bar)
@@ -129,6 +133,49 @@ class TransportApp:
         tk.Button(client_window, text="Сохранить", command=save_client).pack(pady=5)
         tk.Button(client_window, text="Отмена", command=client_window.destroy).pack(pady=5)
 
+    def edit_client(self, event):
+        selected_index = self.clients_listbox.curselection()
+        if selected_index:
+            client = self.transport_company.clients[selected_index[0]]
+            self.status_bar.config(text="Редактирование клиента")
+            client_window = tk.Toplevel(self.root)
+            client_window.title("Редактировать клиента")
+
+            tk.Label(client_window, text="Имя клиента").pack(pady=5)
+            client_name_entry = tk.Entry(client_window)
+            client_name_entry.insert(0, client.name)
+            client_name_entry.pack(pady=5)
+
+            tk.Label(client_window, text="Вес груза (в кг)").pack(pady=5)
+            cargo_weight_entry = tk.Entry(client_window)
+            cargo_weight_entry.insert(0, client.cargo_weight)
+            cargo_weight_entry.pack(pady=5)
+
+            vip_status = tk.BooleanVar(value=client.is_vip)
+            tk.Checkbutton(client_window, text="VIP клиент", variable=vip_status).pack(pady=5)
+
+            def save_client():
+                name = client_name_entry.get()
+                try:
+                    cargo_weight = int(cargo_weight_entry.get())
+                    if not name.isalpha() or len(name) < 2:
+                        raise ValueError("Имя должно содержать только буквы и быть не менее 2 символов.")
+                    if cargo_weight <= 0 or cargo_weight > 10000:
+                        raise ValueError("Вес груза должен быть положительным числом не более 10000 кг.")
+                    
+                    client.name = name
+                    client.cargo_weight = cargo_weight
+                    client.is_vip = vip_status.get()
+                    self.clients_listbox.delete(selected_index)
+                    self.clients_listbox.insert(selected_index, f"{client}")
+                    self.status_bar.config(text="Клиент обновлен")
+                    client_window.destroy()
+                except ValueError as e:
+                    messagebox.showerror("Ошибка ввода", str(e))
+
+            tk.Button(client_window, text="Сохранить", command=save_client).pack(pady=5)
+            tk.Button(client_window, text="Отмена", command=client_window.destroy).pack(pady=5)
+
     def add_vehicle(self):
         self.status_bar.config(text="Добавление транспортного средства")
         vehicle_window = tk.Toplevel(self.root)
@@ -170,6 +217,65 @@ class TransportApp:
 
         tk.Button(vehicle_window, text="Сохранить", command=save_vehicle).pack(pady=5)
         tk.Button(vehicle_window, text="Отмена", command=vehicle_window.destroy).pack(pady=5)
+
+    def edit_vehicle(self, event):
+        selected_index = self.vehicles_listbox.curselection()
+        if selected_index:
+            vehicle = self.transport_company.vehicles[selected_index[0]]
+            self.status_bar.config(text="Редактирование транспортного средства")
+            vehicle_window = tk.Toplevel(self.root)
+            vehicle_window.title("Редактировать транспортное средство")
+
+            tk.Label(vehicle_window, text="Тип транспорта").pack(pady=5)
+            vehicle_type_var = tk.StringVar()
+            vehicle_type_var.set("Грузовик" if isinstance(vehicle, Truck) else "Поезд")
+            tk.OptionMenu(vehicle_window, vehicle_type_var, "Грузовик", "Поезд").pack(pady=5)
+
+            tk.Label(vehicle_window, text="Грузоподъемность (в кг)").pack(pady=5)
+            capacity_entry = tk.Entry(vehicle_window)
+            capacity_entry.insert(0, vehicle.capacity)
+            capacity_entry.pack(pady=5)
+
+            if isinstance(vehicle, Truck):
+                tk.Label(vehicle_window, text="Цвет").pack(pady=5)
+                color_entry = tk.Entry(vehicle_window)
+                color_entry.insert(0, vehicle.color)
+                color_entry.pack(pady=5)
+            else:
+                tk.Label(vehicle_window, text="Количество вагонов").pack(pady=5)
+                number_of_cars_entry = tk.Entry(vehicle_window)
+                number_of_cars_entry.insert(0, vehicle.number_of_cars)
+                number_of_cars_entry.pack(pady=5)
+
+            def save_vehicle():
+                vehicle_type = vehicle_type_var.get()
+                try:
+                    capacity = int(capacity_entry.get())
+                    if capacity <= 0 or capacity > 10000:
+                        raise ValueError("Грузоподъемность должна быть положительным числом не более 10000 кг.")
+
+                    if vehicle_type == "Грузовик":
+                        color = color_entry.get()
+                        if not color or not color.isalpha():
+                            raise ValueError("Цвет грузовика не может быть числом")
+                        vehicle.capacity = capacity
+                        vehicle.color = color
+                    elif vehicle_type == "Поезд":
+                        number_of_cars = int(number_of_cars_entry.get())
+                        if number_of_cars <= 0:
+                            raise ValueError("Количество вагонов должно быть положительным целым числом")
+                        vehicle.capacity = capacity
+                        vehicle.number_of_cars = number_of_cars
+
+                    self.vehicles_listbox.delete(selected_index)
+                    self.vehicles_listbox.insert(selected_index, f"{vehicle}")
+                    self.status_bar.config(text="Транспортное средство обновлено")
+                    vehicle_window.destroy()
+                except ValueError as e:
+                    messagebox.showerror("Ошибка ввода", str(e))
+
+            tk.Button(vehicle_window, text="Сохранить", command=save_vehicle).pack(pady=5)
+            tk.Button(vehicle_window, text="Отмена", command=vehicle_window.destroy).pack(pady=5)
 
     def add_company(self):
         name = simpledialog.askstring("Создать компанию", "Введите название компании:")
